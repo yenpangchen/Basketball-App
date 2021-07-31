@@ -30,9 +30,7 @@ selected_teams=st.sidebar.multiselect("球隊", sorted_teams, sorted_teams)
 
 # 排序方式
 ordertitle=playerstats.drop(columns=["球員", "背號"])
-print(ordertitle.columns)
 sorted_order=sorted(ordertitle)
-print(sorted_order)
 selected_order=st.sidebar.selectbox("排序方式", sorted_order)
 
 # 球員姓名
