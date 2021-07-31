@@ -5,22 +5,27 @@ import numpy as np
 
 # 變寬
 st.set_page_config(layout="wide")
-# 爬蟲抓資料
-url="http://pleagueofficial.com/stat-player"
-request=req.Request(url, headers={
-    "User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36"
-})
-with req.urlopen(request) as response:
-    data=response.read().decode("utf-8")
 
-df=pd.read_html(data)
-playerstats=df[0]
-# print(df[0])
+# 爬蟲抓資料
+@st.cache
+def getData():
+    url="http://pleagueofficial.com/stat-player"
+    request=req.Request(url, headers={
+        
+    })
+    with req.urlopen(request) as response:
+        data=response.read().decode("utf-8")
+    df=pd.read_html(data)
+    playerstats=df[0]
+    return playerstats
+
+playerstats = getData()
 
 st.markdown("""
 # P.League+ Players Stats 
 (Regular Season)
 """)
+
 st.dataframe(playerstats)
 #st.write(playerstats.columns)
 
