@@ -1,7 +1,6 @@
 import pandas as pd
 import urllib.request as req
 import streamlit as st
-import numpy as np
 
 # 變寬
 st.set_page_config(layout="wide")
@@ -11,7 +10,7 @@ st.set_page_config(layout="wide")
 def getData():
     url="http://pleagueofficial.com/stat-player"
     request=req.Request(url, headers={
-        
+        "User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36"
     })
     with req.urlopen(request) as response:
         data=response.read().decode("utf-8")
@@ -50,7 +49,8 @@ st.dataframe(df_selected_team_and_order.sort_values(by=selected_order, ascending
 
 names = pd.Series(title)
 names = sorted(names)
-df=playerstats[playerstats["球員"].isin(names)]
-if(playerstats["球員"].isin(names).any()): # .any() 有任何球員名稱符合時，回傳 True
+pattern = '|'.join(names)
+df=playerstats[playerstats["球員"].str.contains(pattern)]
+if(playerstats["球員"].str.contains(pattern).any()): # .any() 有任何球員名稱符合時，回傳 True
     st.header("Display Player Stats of Specific Player")
     st.dataframe(df)
