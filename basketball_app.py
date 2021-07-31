@@ -1,71 +1,53 @@
-import streamlit as st
 import pandas as pd
-import base64
-import matplotlib.pyplot as plt
-import seaborn as sns
+import urllib.request as req
+import streamlit as st
 import numpy as np
 
-st.title('NBA Player Stats Explorer')
+# 變寬
+st.set_page_config(layout="wide")
+# 爬蟲抓資料
+url="http://pleagueofficial.com/stat-player"
+request=req.Request(url, headers={
+    "User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36"
+})
+with req.urlopen(request) as response:
+    data=response.read().decode("utf-8")
+
+df=pd.read_html(data)
+playerstats=df[0]
+# print(df[0])
 
 st.markdown("""
-This app performs simple webscraping of NBA player stats data!
-* **Python libraries:** base64, pandas, streamlit
-* **Data source:** [Basketball-reference.com](https://www.basketball-reference.com/).
+# P.League+ Players Stats 
+(Regular Season)
 """)
+st.dataframe(playerstats)
+#st.write(playerstats.columns)
 
-st.sidebar.header('User Input Features')
-selected_year = st.sidebar.selectbox('Year', list(reversed(range(1950,2020))))
+# 球隊
+sorted_teams=sorted(playerstats["球隊"].unique())
+selected_teams=st.sidebar.multiselect("球隊", sorted_teams, sorted_teams)
 
-# Web scraping of NBA player stats
-@st.cache
-def load_data(year):
-    url = "https://www.basketball-reference.com/leagues/NBA_" + str(year) + "_per_game.html"
-    html = pd.read_html(url, header = 0)
-    df = html[0]
-    raw = df.drop(df[df.Age == 'Age'].index) # Deletes repeating headers in content
-    raw = raw.fillna(0)
-    playerstats = raw.drop(['Rk'], axis=1)
-    for col in  playerstats.columns[4:]:
-        playerstats[col] = pd.to_numeric(playerstats[col], errors='coerce')
-    # playerstats["FG%"]=pd.to_numeric(playerstats["FG%"])
-    return playerstats
-playerstats = load_data(selected_year)
+# 排序方式
+ordertitle=playerstats.drop(columns=["球員", "背號"])
+print(ordertitle.columns)
+sorted_order=sorted(ordertitle)
+print(sorted_order)
+selected_order=st.sidebar.selectbox("排序方式", sorted_order)
 
-# Sidebar - Team selection
-sorted_unique_team = sorted(playerstats.Tm.unique())
-selected_team = st.sidebar.multiselect('Team', sorted_unique_team, sorted_unique_team)
+# 球員姓名
+title = st.sidebar.text_input('搜尋球員姓名')
 
-# Sidebar - Position selection
-unique_pos = ['C','PF','SF','PG','SG']
-selected_pos = st.sidebar.multiselect('Position', unique_pos, unique_pos)
+# filtering data
 
-# Filtering data
-df_selected_team = playerstats[(playerstats.Tm.isin(selected_team)) & (playerstats.Pos.isin(selected_pos))]
+df_selected_team_and_order = playerstats[(playerstats["球隊"].isin(selected_teams))]
+st.header('Display Player Stats of Selected Team(s) & Selected Order')
+st.write('Data Dimension: ' + str(df_selected_team_and_order.shape[0]) + ' rows and ' + str(df_selected_team_and_order.shape[1]) + ' columns.')
+st.dataframe(df_selected_team_and_order.sort_values(by=selected_order, ascending=False))
 
-st.header('Display Player Stats of Selected Team(s)')
-st.write('Data Dimension: ' + str(df_selected_team.shape[0]) + ' rows and ' + str(df_selected_team.shape[1]) + ' columns.')
-st.dataframe(df_selected_team)
-
-# Download NBA player stats data
-# https://discuss.streamlit.io/t/how-to-download-file-in-streamlit/1806
-def filedownload(df):
-    csv = df.to_csv(index=False)
-    b64 = base64.b64encode(csv.encode()).decode()  # strings <-> bytes conversions
-    href = f'<a href="data:file/csv;base64,{b64}" download="playerstats.csv">Download CSV File</a>'
-    return href
-
-st.markdown(filedownload(df_selected_team), unsafe_allow_html=True)
-
-# Heatmap
-if st.button('Intercorrelation Heatmap'):
-    st.header('Intercorrelation Matrix Heatmap')
-    df_selected_team.to_csv('output.csv',index=False)
-    df = pd.read_csv('output.csv')
-
-    corr = df.corr()
-    mask = np.zeros_like(corr)
-    mask[np.triu_indices_from(mask)] = True
-    with sns.axes_style("white"):
-        f, ax = plt.subplots(figsize=(7, 5))
-        ax = sns.heatmap(corr, mask=mask, vmax=1, square=True)
-    st.pyplot()
+names = pd.Series(title)
+names = sorted(names)
+df=playerstats[playerstats["球員"].isin(names)]
+if(playerstats["球員"].isin(names).any()): # .any() 有任何球員名稱符合時，回傳 True
+    st.header("Display Player Stats of Specific Player")
+    st.dataframe(df)
