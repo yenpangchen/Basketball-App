@@ -11,7 +11,7 @@ st.set_page_config(layout="wide")
 def getData():
     url="http://pleagueofficial.com/stat-player"
     request=req.Request(url, headers={
-        
+        "User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36"
     })
     with req.urlopen(request) as response:
         data=response.read().decode("utf-8")
