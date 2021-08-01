@@ -2,28 +2,36 @@ import pandas as pd
 import urllib.request as req
 import streamlit as st
 
+
 # 變寬
 st.set_page_config(layout="wide")
 
-# 爬蟲抓資料
+# 選擇例行賽還是季後賽
+option = ["例行賽", "季後挑戰賽"]
+seasons=st.sidebar.selectbox("例行賽",option)
+
+# 讀取 CSV 資料
 @st.cache
-def getData():
-    url="http://pleagueofficial.com/stat-player"
-    request=req.Request(url, headers={
-        
-    })
-    with req.urlopen(request) as response:
-        data=response.read().decode("utf-8")
-    df=pd.read_html(data)
-    playerstats=df[0]
+def getData(seasons):
+    if(seasons == option[0]):
+        playerstats=pd.read_csv("regularseason.csv")
+    if(seasons == option[1]):
+        playerstats=pd.read_csv("playoffs.csv")
     return playerstats
 
-playerstats = getData()
+playerstats = getData(seasons)
 
-st.markdown("""
-# P.League+ Players Stats 
-(Regular Season)
-""")
+# 標題
+if(seasons == option[0]):
+    st.markdown("""
+    # P.League+ Players Stats 
+    (Regular Season)
+    """)
+else:
+    st.markdown("""
+    # P.League+ Players Stats 
+    (Post Season)
+    """)
 
 st.dataframe(playerstats)
 
@@ -56,5 +64,3 @@ if len(title)!=0:
         st.dataframe(df)
     else:
         st.write("Players Not Found")
-
-
