@@ -1,1 +1,1 @@
-# Basketball App Using Python Streamlit and Deploy on Heroku
+# Basketball App Using Python Streamlit and Deploying on Heroku
